@@ -9,7 +9,7 @@ Admins can sign in, create new users/admins, and manage all user data. Users can
 ## 🌐 Live Demo
 
 🔗 **Try it here**: [https://priyansh-lk90.onrender.com/](https://priyansh-lk90.onrender.com/)  
-👀 Or visit a short URL: [https://rebrand.ly/iq9r4mr](https://rebrand.ly/iq9r4mr)
+👀 Or visit a short URL: [https://rebrand.ly/priyansh770](https://rebrand.ly/priyansh770)
 
 ---
 
