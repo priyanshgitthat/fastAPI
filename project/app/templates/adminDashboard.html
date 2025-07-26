@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}
+Admin Page
+{% endblock title %}
+
+{% block content %}
+<h2>Admin's Dashboard</h2>
+<div id="userDetails">Loading admin data...</div>
+
+<a class='btn' onclick='createUser()'>create user</a>
+
+<h3 id='h3'>List Of All Site Users</h3>
+<table id="userTable" cellspacing=0>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Username</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Data will be inserted here -->
+  </tbody>
+</table>
+
+<button onclick='logout()' class="logout-btn btn">Logout</button>
+<a href="/admin-page" class="btn">Go To Home Page</a>
+
+
+
+
+
+
+
+<script>
+
+let token ;
+document.addEventListener("DOMContentLoaded", async () => {
+  token = localStorage.getItem("token");
+  if (!token) {
+    window.location.href = "/login";
+    return;
+  }
+
+  const dashboardRes = await fetch("/admin/dashboard", {
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer " + token
+    }
+  });
+
+  if (dashboardRes.status === 401 || dashboardRes.status === 403) {
+    alert("Session expired. Please log in again.");
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+    return;
+  }
+
+  const dashboardData = await dashboardRes.json();
+  console.log("Dashboard Data:", dashboardData);
+
+  const userDiv = document.getElementById("userDetails");
+  userDiv.innerHTML = `
+    <p>Name:  <span class="spn">${dashboardData.user.name}</span></p>
+    <p>Username: <span class="spn">${dashboardData.user.username}</span></p>
+    <p>${dashboardData.message}</p>
+  `;
+
+  document.querySelector("title").textContent = `${dashboardData.user.name}'s Dashboard`;
+
+  //Fetch all users
+  const usersRes = await fetch("/admin/showUsers", {
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer " + token
+    }
+  });
+
+  if (!usersRes.ok) {
+    alert("Failed to load users.");
+    return;
+  }
+
+  const users = await usersRes.json();
+  const tableBody = document.querySelector("#userTable tbody");
+
+  users.forEach(user => {
+    const row = document.createElement("tr");
+row.innerHTML = `
+  <td data-label="ID">${user.id}</td>
+  <td data-label="Name">${user.name}</td>
+  <td data-label="Username">
+    ${user.username}
+    <button class="delete-btn">X</button>
+  </td>
+`;
+
+    tableBody.appendChild(row);
+  });
+});
+
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "/admin-page";
+}
+
+
+function createUser() {
+  window.location.href="/admin/create-new-user"
+}
+
+
+
+document.querySelector("#userTable tbody").addEventListener("click", (e) => {
+  if (e.target.classList.contains("delete-btn")) {
+    const confirmed = confirm("Sure to delete this user?");
+    if (!confirmed) return;
+
+    const row = e.target.closest("tr");
+    const userId = parseInt(row.querySelector("td").textContent.trim())
+
+    fetch(`/admin/delete-user/${userId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    }).then(res => {
+      if (res.status === 204) {
+        row.remove(); // update UI
+      } else {
+        alert("Failed to delete user");
+      }
+    });
+
+
+
+    console.log("Deleting user with ID:", userId);
+
+
+  }
+});
+
+
+
+
+
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard Page
+{% endblock title %}
+{% block content %}
+<h2>Dashboard</h2>
+<div id="userDetails">Loading user data...</div>
+
+
+<button onclick='logout()' class="logout-btn btn">logout</button>
+
+<a href="/" class="btn">Go To Home Page</a>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    // No token? Redirect to login
+    window.location.href = "/login";
+    return;
+  }
+
+  const res = await fetch("/user/dashboard", {
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer " + token
+    }
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    // Token expired or invalid
+    alert("Session expired. Please log in again.");
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+    return;
+  }
+
+  const data = await res.json();
+  console.log("API response:", data);
+
+  const userDiv = document.getElementById("userDetails");
+  userDiv.innerHTML = `
+    <p>Name:  <span class="spn"> ${data.user.name} </span> </p>
+    <p>Username: <span class="spn"> ${data.user.username} </span>  </p>
+    <p>${data.message}</p>
+  `;
+
+  const title = document.querySelector("title")
+  title.textContent = `${data.user.name}'s Dashboard `
+});
+
+function logout() {
+  localStorage.removeItem("token");  // 🔐 Clear the token
+  window.location.href = "/login";  // 🚪 Redirect to login page
+}
+</script>
+{% endblock %}
